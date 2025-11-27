@@ -1,6 +1,9 @@
+package Board;
 import java.awt.*;
 
-class Board extends Canvas {
+import Piece.Piece;
+
+public class Board extends Canvas {
     public static final int ROWS = 10;
     public static final int COLS = 9;
 

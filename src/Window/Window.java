@@ -1,7 +1,11 @@
+package Window;
 import java.awt.*;
 import java.awt.event.*;
 
-class Window extends Frame {
+import Board.Board;
+import Piece.Piece;
+
+public class Window extends Frame {
     private int width;
     private int height;
     private Board board;
