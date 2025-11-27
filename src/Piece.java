@@ -7,6 +7,9 @@ class Piece {
     private String label;
     private boolean side; // true = RED, false = BLACK
 
+    public static final boolean RED = true;
+    public static final boolean BLACK = false;
+
     public Piece(int row, int col, String label, boolean side) {
         if (row < 0 || row >= Board.ROWS || col < 0 || col >= Board.COLS) {
             throw new IllegalArgumentException("row/col 越界");
@@ -30,14 +33,20 @@ class Piece {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                             RenderingHints.VALUE_ANTIALIAS_ON);
 
+        int borderSize = (int)Math.round(size * 0.85);
+
         int x = centerX - size / 2;
         int y = centerY - size / 2;
+        int borderX = centerX - borderSize / 2;
+        int borderY = centerY - borderSize / 2;
 
         // 外圈填充
         g2.setColor(new Color(255, 200, 120));
         g2.fillOval(x, y, size, size);
 
         // 边框
+        g2.setColor(Color.DARK_GRAY);
+        g2.drawOval(borderX, borderY, borderSize, borderSize);
         g2.setColor(Color.DARK_GRAY);
         g2.drawOval(x, y, size, size);
 
@@ -50,7 +59,7 @@ class Piece {
         int tx = centerX - fm.stringWidth(label) / 2;
         int ty = centerY + (fm.getAscent() - fm.getDescent()) / 2;
 
-        g2.setColor(side == Const.RED ? new Color(180, 0, 0) : Color.BLACK);
+        g2.setColor(side == RED ? new Color(180, 0, 0) : Color.BLACK);
         g2.drawString(label, tx, ty);
     }
 }

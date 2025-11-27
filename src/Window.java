@@ -20,12 +20,10 @@ class Window extends Frame {
     private void window_init() {
         setTitle("中国象棋");
         setSize(width, height);
-        setLayout(new BorderLayout());
 
         board = new Board();
         add(board, BorderLayout.CENTER);
 
-        // 窗口关闭
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
                 System.exit(0);
@@ -55,11 +53,7 @@ class Window extends Frame {
         board.setPiece(p.getRow(), p.getCol(), p);
     }
 
-
-    /**
-     * 可选：移除某位置棋子
-     */
-    public void remove_piece_at(int row, int col) {
+    public void remove_piece(int row, int col) {
         board.setPiece(row, col, null);
     }
 }

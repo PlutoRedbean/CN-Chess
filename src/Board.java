@@ -1,15 +1,12 @@
 import java.awt.*;
 
-/* 棋盘：绘制线条、楚河汉界，并在交叉点绘制棋子 */
 class Board extends Canvas {
-    public static final int ROWS = 10; // 10 horizontal lines -> 10 intersection rows
-    public static final int COLS = 9;  // 9 vertical lines -> 9 intersection cols
+    public static final int ROWS = 10;
+    public static final int COLS = 9;
 
     private Piece[][] pieces = new Piece[ROWS][COLS];
 
     public Board() {
-        // 让父窗口用 BorderLayout 把这个 Canvas 扩展到中央
-        setPreferredSize(new Dimension(600, 700));
     }
 
     /**
@@ -28,82 +25,125 @@ class Board extends Canvas {
         return pieces[row][col];
     }
 
+    private void paint_background(Graphics2D g2, int winW, int winH,
+                                  int boardX, int boardY, int boardSide) {
+        g2.setColor(Color.WHITE);
+        g2.fillRect(0, 0, winW, winH);
+        g2.setColor(new Color(245, 222, 179));
+        g2.fillRect(boardX, boardY, boardSide, boardSide);
+    }
+
+    private void paint_line(Graphics2D g2, int borderTop, int borderBottom,
+                            int borderLeft, int borderRight, double cellH, double cellW) {
+        g2.setColor(Color.DARK_GRAY);
+        for (int r = 0; r < ROWS; r++) {
+            int y = (int) Math.round(borderTop + r * cellH);
+            int x1 = borderLeft;
+            int x2 = borderRight;
+            g2.drawLine(x1, y, x2, y);
+        }
+
+        for (int c = 0; c < COLS; c++) {
+            int x = (int) Math.round(borderLeft + c * cellW);
+            int y1_upper = borderTop;
+            int y2_upper = (int) Math.round(borderTop + 4 * cellH);
+            int y1_lower = (int) Math.round(borderBottom - 4 * cellH);
+            int y2_lower = borderBottom;
+            if (c == 0 || c == COLS - 1) {
+                g2.drawLine(x, y1_upper, x, y2_lower);
+            }
+            g2.drawLine(x, y1_upper, x, y2_upper);
+            g2.drawLine(x, y1_lower, x, y2_lower);
+        }
+
+        int x1 = (int) Math.round(borderLeft + cellW * 3);
+        int x2 = (int) Math.round(borderLeft + cellW * 5);
+        int y1_upper = borderTop;
+        int y2_upper = (int) Math.round(borderTop + 2 * cellH);
+        int y1_lower = (int) Math.round(borderBottom - 2 * cellH);
+        int y2_lower = borderBottom;
+        g2.drawLine(x1, y1_upper, x2, y2_upper);
+        g2.drawLine(x2, y1_upper, x1, y2_upper);
+        g2.drawLine(x1, y1_lower, x2, y2_lower);
+        g2.drawLine(x2, y1_lower, x1, y2_lower);
+    }
+
+    private void paint_river(Graphics2D g2, int borderTop, int borderBottom,
+                            int borderLeft, int borderRight, double cellH, double cellW) {
+        double yRiver = borderTop + (4 + 0.5) * cellH;
+        int fontSize = Math.max(12, (int)(cellH * 0.6));
+        int offset = fontSize;
+
+        Font riverFont = new Font("Serif", Font.BOLD, fontSize);
+        g2.setFont(riverFont);
+        FontMetrics fm = g2.getFontMetrics();
+        String left = "楚河";
+        String right = "汉界";
+        
+        int cx = (borderLeft + borderRight) / 2;
+        int lx = cx - offset - fm.stringWidth(left);
+        int rx = cx + offset;
+        int ty = (int) Math.round(yRiver + (fm.getAscent() - fm.getDescent()) / 2.0);
+
+        g2.setColor(new Color(120, 60, 20)); // 深棕色
+        g2.drawString(left, lx, ty);
+        g2.drawString(right, rx, ty);
+    }
+
+    private void paint_pieces(Graphics2D g2, int borderTop, int borderBottom,
+                              int borderLeft, int borderRight, double cellH, double cellW) {
+        // 绘制棋子：每个 piece 在 (padding + c*cellW, padding + r*cellH) 的交叉点为中心
+        double sizeK = 0.8;
+
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
+                Piece p = pieces[r][c];
+                if (p != null) {
+                    int centerX = (int) Math.round(borderLeft + c * cellW);
+                    int centerY = (int) Math.round(borderTop + r * cellH);
+                    int pieceSize = (int) Math.round(Math.min(cellW, cellH) * sizeK);
+                    p.drawAt(g2, centerX, centerY, pieceSize);
+                }
+            }
+        }
+    }
+
     @Override
     public void paint(Graphics g) {
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                             RenderingHints.VALUE_ANTIALIAS_ON);
 
-        int H = getHeight();
-        int W = getWidth();
+        int winW = getWidth();
+        int winH = getHeight();
 
-        H = H > W ? H : W;
-        W = H > W ? H : W;
+        int W = winH;
+        int H = winH;
 
-        // 外围留白（相对）
-        int margin = Math.min(W, H) / 20; // 动态留白，防止棋子贴边
-        double usableW = W - 2.0 * margin;
-        double usableH = H - 2.0 * margin;
+        int boardSide = H;
+        int boardX = (winW - boardSide) / 2;
+        int boardY = 0;
+        
+        int padding = Math.max(4, boardSide / 20);
+        double usableW = boardSide - 2.0 * padding;
+        double usableH = boardSide - 2.0 * padding;
 
-        // 计算每两个交叉点之间的像素距离（COLS-1 间隔, ROWS-1 间隔）
         double cellW = usableW / (COLS - 1);
         double cellH = usableH / (ROWS - 1);
 
-        // 背景
-        g2.setColor(new Color(245, 222, 179)); // 浅木色
-        g2.fillRect(0, 0, W, H);
+        int borderLeft = boardX + padding;
+        int borderRight = boardX + boardSide - padding;
+        int borderTop = boardY + padding;
+        int borderBottom = boardY + boardSide - padding;
 
-        // 绘制横线（10 条）
-        g2.setColor(Color.DARK_GRAY);
-        for (int r = 0; r < ROWS; r++) {
-            int y = (int) Math.round(margin + r * cellH);
-            g2.drawLine(margin, y, W - margin, y);
-        }
+        paint_background(g2, winW, winH, boardX, boardY, boardSide);
 
-        // 绘制竖线（9 条）
-        for (int c = 0; c < COLS; c++) {
-            int x = (int) Math.round(margin + c * cellW);
-            g2.drawLine(x, margin, x, H - margin);
-        }
+        paint_line(g2, borderTop, borderBottom, borderLeft, borderRight, cellH, cellW);
 
-        // 可选：在交叉点处画小点以示位置（不必要）
-        // for (int r = 0; r < ROWS; r++) {
-        //     for (int c = 0; c < COLS; c++) {
-        //         int x = (int)Math.round(margin + c * cellW);
-        //         int y = (int)Math.round(margin + r * cellH);
-        //         g2.fillOval(x-2, y-2, 4, 4);
-        //     }
-        // }
-
-        // 绘制“楚河” / “汉界” —— 在第4行和第5行中间
-        double yRiver = margin + (4 + 0.5) * cellH;
-        Font riverFont = new Font("Serif", Font.BOLD, Math.max(12, (int)(cellH * 0.6)));
-        g2.setFont(riverFont);
-        FontMetrics fm = g2.getFontMetrics();
-        String left = "楚河";
-        String right = "汉界";
-        // 左侧 "楚河" 放在中线左偏，右侧 "汉界" 放在中线右偏
-        int cx = W / 2;
-        int lx = cx - 40 - fm.stringWidth(left); // 根据需要微调偏移
-        int rx = cx + 40;
-        int ty = (int) Math.round(yRiver + (fm.getAscent() - fm.getDescent()) / 2.0);
-        g2.setColor(new Color(120, 60, 20)); // 深棕色文字
-        g2.drawString(left, lx, ty);
-        g2.drawString(right, rx, ty);
-
-        // 绘制棋子：每个 piece 在 (margin + c*cellW, margin + r*cellH) 的交叉点为中心
-        for (int r = 0; r < ROWS; r++) {
-            for (int c = 0; c < COLS; c++) {
-                Piece p = pieces[r][c];
-                if (p != null) {
-                    int centerX = (int) Math.round(margin + c * cellW);
-                    int centerY = (int) Math.round(margin + r * cellH);
-                    // 棋子直径取交叉间距的 0.8 倍，避免粘到线
-                    int pieceSize = (int) Math.round(Math.min(cellW, cellH) * 0.8);
-                    p.drawAt(g2, centerX, centerY, pieceSize);
-                }
-            }
-        }
+        paint_river(g2, borderTop, borderBottom, borderLeft, borderRight, cellH, cellW);
+        
+        paint_pieces(g2, borderTop, borderBottom, borderLeft, borderRight, cellH, cellW);
+        
     }
 }
 
