@@ -1,6 +1,5 @@
 import java.awt.*;
 
-/* 棋子类（保持 row/col/label/side 字段） */
 class Piece {
     private int row;
     private int col;
@@ -27,28 +26,20 @@ class Piece {
     public String getLabel() { return label; }
     public boolean getSide() { return side; }
 
-    /**
-     * 在给定的交叉点中心 (centerX, centerY) 和指定直径 size 内绘制棋子
-     */
-    public void drawAt(Graphics g, int centerX, int centerY, int size) {
-        Graphics2D g2 = (Graphics2D) g;
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                            RenderingHints.VALUE_ANTIALIAS_ON);
-
+    private void paint_border(Graphics2D g2, int centerX, int centerY, int size) {
         int borderSize = (int)Math.round(size * 0.85);
 
         int x = centerX - size / 2;
         int y = centerY - size / 2;
-        int borderX = centerX - borderSize / 2;
-        int borderY = centerY - borderSize / 2;
 
-        // 外圈填充
         g2.setColor(new Color(255, 200, 120));
         g2.fillOval(x, y, size, size);
 
-        // 边框
         g2.setColor(Color.DARK_GRAY);
         g2.drawOval(x, y, size, size);
+
+        int borderX = centerX - borderSize / 2;
+        int borderY = centerY - borderSize / 2;
         if (side == RED) {
             g2.setColor(COLOR_RED);
             g2.drawOval(borderX, borderY, borderSize, borderSize);
@@ -56,9 +47,9 @@ class Piece {
             g2.setColor(COLOR_BLACK);
             g2.drawOval(borderX, borderY, borderSize, borderSize);
         }
-        
+    }
 
-        // 文本（根据 size 自动调整字体）
+    private void paint_label(Graphics2D g2, int centerX, int centerY, int size) {
         int fontSize = Math.max(12, size / 2);
         Font font = new Font("Serif", Font.BOLD, fontSize);
         g2.setFont(font);
@@ -69,5 +60,18 @@ class Piece {
 
         g2.setColor(side == RED ? COLOR_RED : COLOR_BLACK);
         g2.drawString(label, tx, ty);
+    }
+    
+    /**
+     * 在给定的交叉点中心 (centerX, centerY) 和指定直径 size 内绘制棋子
+     */
+    public void drawAt(Graphics g, int centerX, int centerY, int size) {
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                            RenderingHints.VALUE_ANTIALIAS_ON);
+
+        paint_border(g2, centerX, centerY, size);
+
+        paint_label(g2, centerX, centerY, size);
     }
 }

@@ -9,9 +9,6 @@ class Board extends Canvas {
     public Board() {
     }
 
-    /**
-     * 设置某个交叉点上的棋子（row:0..9, col:0..8）
-     */
     public void setPiece(int row, int col, Piece piece) {
         if (row < 0 || row >= ROWS || col < 0 || col >= COLS) {
             throw new IllegalArgumentException("row/col 越界: " + row + "," + col);
@@ -36,19 +33,22 @@ class Board extends Canvas {
     private void paint_line(Graphics2D g2, int borderTop, int borderBottom,
                             int borderLeft, int borderRight, double cellH, double cellW) {
         g2.setColor(Color.DARK_GRAY);
+
+        int x1, x2, y1_upper, y2_upper, y1_lower, y2_lower;
+        
         for (int r = 0; r < ROWS; r++) {
             int y = (int) Math.round(borderTop + r * cellH);
-            int x1 = borderLeft;
-            int x2 = borderRight;
+            x1 = borderLeft;
+            x2 = borderRight;
             g2.drawLine(x1, y, x2, y);
         }
 
         for (int c = 0; c < COLS; c++) {
             int x = (int) Math.round(borderLeft + c * cellW);
-            int y1_upper = borderTop;
-            int y2_upper = (int) Math.round(borderTop + 4 * cellH);
-            int y1_lower = (int) Math.round(borderBottom - 4 * cellH);
-            int y2_lower = borderBottom;
+            y1_upper = borderTop;
+            y2_upper = (int) Math.round(borderTop + 4 * cellH);
+            y1_lower = (int) Math.round(borderBottom - 4 * cellH);
+            y2_lower = borderBottom;
             if (c == 0 || c == COLS - 1) {
                 g2.drawLine(x, y1_upper, x, y2_lower);
             }
@@ -56,12 +56,12 @@ class Board extends Canvas {
             g2.drawLine(x, y1_lower, x, y2_lower);
         }
 
-        int x1 = (int) Math.round(borderLeft + cellW * 3);
-        int x2 = (int) Math.round(borderLeft + cellW * 5);
-        int y1_upper = borderTop;
-        int y2_upper = (int) Math.round(borderTop + 2 * cellH);
-        int y1_lower = (int) Math.round(borderBottom - 2 * cellH);
-        int y2_lower = borderBottom;
+        x1 = (int) Math.round(borderLeft + cellW * 3);
+        x2 = (int) Math.round(borderLeft + cellW * 5);
+        y1_upper = borderTop;
+        y2_upper = (int) Math.round(borderTop + 2 * cellH);
+        y1_lower = (int) Math.round(borderBottom - 2 * cellH);
+        y2_lower = borderBottom;
         g2.drawLine(x1, y1_upper, x2, y2_upper);
         g2.drawLine(x2, y1_upper, x1, y2_upper);
         g2.drawLine(x1, y1_lower, x2, y2_lower);
