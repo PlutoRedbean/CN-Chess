@@ -7,7 +7,7 @@ public class Cannon extends Piece {
 
     @Override
     String getLabel() {
-        if (side == Piece.RED) return "仕";
-        else return "士";
+        if (side == Piece.RED) return "炮";
+        else return "砲";
     }
 }

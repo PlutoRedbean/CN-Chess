@@ -7,7 +7,7 @@ public class Chariot extends Piece {
 
     @Override
     String getLabel() {
-        if (side == Piece.RED) return "仕";
-        else return "士";
+        if (side == Piece.RED) return "車";
+        else return "俥";
     }
 }

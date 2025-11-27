@@ -7,7 +7,7 @@ public class Elephant extends Piece {
 
     @Override
     String getLabel() {
-        if (side == Piece.RED) return "仕";
-        else return "士";
+        if (side == Piece.RED) return "相";
+        else return "象";
     }
 }
