@@ -9,6 +9,8 @@ class Piece {
 
     public static final boolean RED = true;
     public static final boolean BLACK = false;
+    public static final java.awt.Color COLOR_RED = new Color(180, 0, 0);
+    public static final java.awt.Color COLOR_BLACK = Color.BLACK;
 
     public Piece(int row, int col, String label, boolean side) {
         if (row < 0 || row >= Board.ROWS || col < 0 || col >= Board.COLS) {
@@ -46,9 +48,15 @@ class Piece {
 
         // 边框
         g2.setColor(Color.DARK_GRAY);
-        g2.drawOval(borderX, borderY, borderSize, borderSize);
-        g2.setColor(Color.DARK_GRAY);
         g2.drawOval(x, y, size, size);
+        if (side == RED) {
+            g2.setColor(COLOR_RED);
+            g2.drawOval(borderX, borderY, borderSize, borderSize);
+        } else {
+            g2.setColor(COLOR_BLACK);
+            g2.drawOval(borderX, borderY, borderSize, borderSize);
+        }
+        
 
         // 文本（根据 size 自动调整字体）
         int fontSize = Math.max(12, size / 2);
@@ -59,7 +67,7 @@ class Piece {
         int tx = centerX - fm.stringWidth(label) / 2;
         int ty = centerY + (fm.getAscent() - fm.getDescent()) / 2;
 
-        g2.setColor(side == RED ? new Color(180, 0, 0) : Color.BLACK);
+        g2.setColor(side == RED ? COLOR_RED : COLOR_BLACK);
         g2.drawString(label, tx, ty);
     }
 }
