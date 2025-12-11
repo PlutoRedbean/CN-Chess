@@ -75,4 +75,9 @@ public abstract class Piece {
 
         paint_label(g2, centerX, centerY, size);
     }
+
+    public void setPos(int row, int col) {
+        this.row = row;
+        this.col = col;
+    }
 }
