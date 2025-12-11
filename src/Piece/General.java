@@ -10,4 +10,9 @@ public class General extends Piece {
         if (side == Piece.RED) return "帥";
         else return "將";
     }
+
+    @Override
+    public boolean isValidMove(int targetRow, int targetCol, Piece[][] board) {
+        return true;
+    }
 }

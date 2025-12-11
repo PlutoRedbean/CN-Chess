@@ -10,4 +10,9 @@ public class Elephant extends Piece {
         if (side == Piece.RED) return "相";
         else return "象";
     }
+
+    @Override
+    public boolean isValidMove(int targetRow, int targetCol, Piece[][] board) {
+        return true;
+    }
 }

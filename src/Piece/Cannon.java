@@ -10,4 +10,9 @@ public class Cannon extends Piece {
         if (side == Piece.RED) return "炮";
         else return "砲";
     }
+
+    @Override
+    public boolean isValidMove(int targetRow, int targetCol, Piece[][] board) {
+        return true;
+    }
 }

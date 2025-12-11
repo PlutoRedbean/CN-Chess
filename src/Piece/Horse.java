@@ -10,4 +10,9 @@ public class Horse extends Piece {
         if (side == Piece.RED) return "傌";
         else return "馬";
     }
+
+    @Override
+    public boolean isValidMove(int targetRow, int targetCol, Piece[][] board) {
+        return true;
+    }
 }

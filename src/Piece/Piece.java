@@ -80,4 +80,6 @@ public abstract class Piece {
         this.row = row;
         this.col = col;
     }
+
+    public abstract boolean isValidMove(int targetRow, int targetCol, Piece[][] board);
 }

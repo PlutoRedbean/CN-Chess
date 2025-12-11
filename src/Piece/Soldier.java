@@ -10,4 +10,9 @@ public class Soldier extends Piece {
         if (side == Piece.RED) return "兵";
         else return "卒";
     }
+
+    @Override
+    public boolean isValidMove(int targetRow, int targetCol, Piece[][] board) {
+        return true;
+    }
 }

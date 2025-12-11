@@ -10,4 +10,9 @@ public class Advisor extends Piece {
         if (side == Piece.RED) return "仕";
         else return "士";
     }
+
+    @Override
+    public boolean isValidMove(int targetRow, int targetCol, Piece[][] board) {
+        return true;
+    }
 }
