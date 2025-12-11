@@ -48,11 +48,7 @@ public class Board extends Canvas {
             if (clickedPiece != null && clickedPiece.getSide() == isRedTurn) {
                 selectedPiece = clickedPiece;
                 repaint();
-                return;
-            }
-
-            // 点击了空格 或 敌方棋子 -> 尝试移动
-            if (selectedPiece.isValidMove(row, col, pieces)) {
+            } else if (selectedPiece.isValidMove(row, col, pieces)) {
                 movePiece(selectedPiece, row, col);
             }
         }

@@ -4,8 +4,8 @@ import java.awt.*;
 import Board.Board;
 
 public abstract class Piece {
-    private int row;
-    private int col;
+    int row;
+    int col;
     boolean side; // true = RED, false = BLACK
 
     public static final boolean RED = true;
