@@ -12,7 +12,7 @@ public class Board extends Canvas {
     private Piece[][] pieces = new Piece[ROWS][COLS];
 
     private Piece selectedPiece = null;
-    private boolean isRedTurn = true;   // 当前回合：true为红，false为黑
+    private boolean isRedTurn = Piece.RED;
 
     private double cellW, cellH;
     private int borderLeft, borderTop;
@@ -52,7 +52,9 @@ public class Board extends Canvas {
             }
 
             // 点击了空格 或 敌方棋子 -> 尝试移动
-            movePiece(selectedPiece, row, col);
+            if (selectedPiece.isValidMove(row, col, pieces)) {
+                movePiece(selectedPiece, row, col);
+            }
         }
     }
 
