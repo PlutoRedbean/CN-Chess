@@ -6,11 +6,20 @@ public class Soldier extends Piece {
     }
 
     private boolean isAdvance(int targetRow, int targetCol) {
-        if (targetCol != col) {
+        if (targetCol != col)
             return false;
-        } else {
-            if (side == RED && targetRow - 1) return true;
-        }
+
+        if (side == RED && targetRow + 1 == row) return true;
+        else if (side == BLACK && targetRow - 1 == row) return true;
+        
+        return false;
+    }
+
+    private boolean isTurn(int targetRow, int targetCol) {
+        if (targetRow == row) 
+            return Math.abs(targetCol - col) == 1;
+
+        return false;
     }
 
     private boolean isCrossRiver() {
@@ -30,15 +39,9 @@ public class Soldier extends Piece {
     @Override
     public boolean isValidMove(int targetRow, int targetCol, Piece[][] board) {
         if (isCrossRiver()) {
-            if (targetRow == row) {
-                return Math.abs(targetCol - col) == 1;
-            } else if (targetCol == col) {
-                return targetRow - row == (side == RED ? -1 : 1);
-            } else {
-                return false;
-            }
+            return isAdvance(targetRow, targetCol) || isTurn(targetRow, targetCol);
         } else {
-            return targetCol == col && targetRow - row == (side == RED ? -1 : 1);
+            return isAdvance(targetRow, targetCol);
         }
     }
 }
