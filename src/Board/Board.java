@@ -1,5 +1,7 @@
 package Board;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import Piece.Piece;
 
@@ -9,7 +11,62 @@ public class Board extends Canvas {
 
     private Piece[][] pieces = new Piece[ROWS][COLS];
 
+    private Piece selectedPiece = null;
+    private boolean isRedTurn = true;   // 当前回合：true为红，false为黑
+
+    private double cellW, cellH;
+    private int borderLeft, borderTop;
+
     public Board() {
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                handleMouseClick(e.getX(), e.getY());
+            }
+        });
+    }
+
+    private void handleMouseClick(int x, int y) {
+        // 四舍五入判断点击了哪个交叉点范围
+        int col = (int) Math.round((x - borderLeft) / cellW);
+        int row = (int) Math.round((y - borderTop) / cellH);
+
+        if (row < 0 || row >= ROWS || col < 0 || col >= COLS) {
+            return;
+        }
+
+        Piece clickedPiece = pieces[row][col];
+
+        if (selectedPiece == null) {
+            if (clickedPiece != null && clickedPiece.getSide() == isRedTurn) {
+                selectedPiece = clickedPiece;
+                repaint();
+            }
+        } else {
+            
+            // 点击了同色棋子 -> 更改选择
+            if (clickedPiece != null && clickedPiece.getSide() == isRedTurn) {
+                selectedPiece = clickedPiece;
+                repaint();
+                return;
+            }
+
+            // 点击了空格 或 敌方棋子 -> 尝试移动
+            movePiece(selectedPiece, row, col);
+        }
+    }
+
+    private void movePiece(Piece p, int targetRow, int targetCol) {
+        pieces[p.getRow()][p.getCol()] = null;
+        
+        pieces[targetRow][targetCol] = p;
+
+        p.setPos(targetRow, targetCol);
+
+        isRedTurn = !isRedTurn;
+        selectedPiece = null;
+
+        repaint();
     }
 
     public void setPiece(int row, int col, Piece piece) {
@@ -106,6 +163,14 @@ public class Board extends Canvas {
                     int centerY = (int) Math.round(borderTop + r * cellH);
                     int pieceSize = (int) Math.round(Math.min(cellW, cellH) * sizeK);
                     p.drawAt(g2, centerX, centerY, pieceSize);
+
+                    // 绘制选中框
+                    if (p == selectedPiece) {
+                        g2.setColor(Color.BLUE);
+                        g2.setStroke(new BasicStroke(3)); // 加粗线条
+                        int s = (int)(pieceSize * 1.1); // 稍微大一点的框
+                        g2.drawRect(centerX - s/2, centerY - s/2, s, s);
+                    }
                 }
             }
         }
@@ -120,23 +185,20 @@ public class Board extends Canvas {
         int winW = getWidth();
         int winH = getHeight();
 
-        int W = winH;
-        int H = winH;
-
-        int boardSide = H;
+        // 计算布局并保存到成员变量，供鼠标事件使用
+        int boardSide = Math.min(winW, winH);
         int boardX = (winW - boardSide) / 2;
-        int boardY = 0;
+        int boardY = (winH - boardSide) / 2;
         
         int padding = Math.max(4, boardSide / 20);
         double usableW = boardSide - 2.0 * padding;
         double usableH = boardSide - 2.0 * padding;
 
-        double cellW = usableW / (COLS - 1);
-        double cellH = usableH / (ROWS - 1);
-
-        int borderLeft = boardX + padding;
+        this.cellW = usableW / (COLS - 1);
+        this.cellH = usableH / (ROWS - 1);
+        this.borderLeft = boardX + padding;
         int borderRight = boardX + boardSide - padding;
-        int borderTop = boardY + padding;
+        this.borderTop = boardY + padding;
         int borderBottom = boardY + boardSide - padding;
 
         paint_background(g2, winW, winH, boardX, boardY, boardSide);
