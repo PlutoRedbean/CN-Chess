@@ -5,7 +5,7 @@ import Piece.Elephant;
 import Piece.General;
 import Piece.Horse;
 import Piece.Piece;
-import Piece.Solder;
+import Piece.Soldier;
 import Window.Window;
 
 public class Chess {
@@ -39,16 +39,16 @@ public class Chess {
         Piece black_cannon1 = new Cannon(2, 7, Piece.BLACK);
         window.add_piece(black_cannon1);
 
-        Piece black_solder0 = new Solder(3, 0, Piece.BLACK);
-        window.add_piece(black_solder0);
-        Piece black_solder1 = new Solder(3, 2, Piece.BLACK);
-        window.add_piece(black_solder1);
-        Piece black_solder2 = new Solder(3, 4, Piece.BLACK);
-        window.add_piece(black_solder2);
-        Piece black_solder3 = new Solder(3, 6, Piece.BLACK);
-        window.add_piece(black_solder3);
-        Piece black_solder4 = new Solder(3, 8, Piece.BLACK);
-        window.add_piece(black_solder4);
+        Piece black_soldier0 = new Soldier(3, 0, Piece.BLACK);
+        window.add_piece(black_soldier0);
+        Piece black_soldier1 = new Soldier(3, 2, Piece.BLACK);
+        window.add_piece(black_soldier1);
+        Piece black_soldier2 = new Soldier(3, 4, Piece.BLACK);
+        window.add_piece(black_soldier2);
+        Piece black_soldier3 = new Soldier(3, 6, Piece.BLACK);
+        window.add_piece(black_soldier3);
+        Piece black_soldier4 = new Soldier(3, 8, Piece.BLACK);
+        window.add_piece(black_soldier4);
         
         Piece red_chariot0 = new Chariot(9, 0, Piece.RED);
         window.add_piece(red_chariot0);
@@ -74,15 +74,15 @@ public class Chess {
         Piece red_cannon1 = new Cannon(7, 7, Piece.RED);
         window.add_piece(red_cannon1);
 
-        Piece red_solder0 = new Solder(6, 0, Piece.RED);
-        window.add_piece(red_solder0);
-        Piece red_solder1 = new Solder(6, 2, Piece.RED);
-        window.add_piece(red_solder1);
-        Piece red_solder2 = new Solder(6, 4, Piece.RED);
-        window.add_piece(red_solder2);
-        Piece red_solder3 = new Solder(6, 6, Piece.RED);
-        window.add_piece(red_solder3);
-        Piece red_solder4 = new Solder(6, 8, Piece.RED);
-        window.add_piece(red_solder4);
+        Piece red_soldier0 = new Soldier(6, 0, Piece.RED);
+        window.add_piece(red_soldier0);
+        Piece red_soldier1 = new Soldier(6, 2, Piece.RED);
+        window.add_piece(red_soldier1);
+        Piece red_soldier2 = new Soldier(6, 4, Piece.RED);
+        window.add_piece(red_soldier2);
+        Piece red_soldier3 = new Soldier(6, 6, Piece.RED);
+        window.add_piece(red_soldier3);
+        Piece red_soldier4 = new Soldier(6, 8, Piece.RED);
+        window.add_piece(red_soldier4);
     }
 }

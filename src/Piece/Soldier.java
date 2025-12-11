@@ -1,7 +1,7 @@
 package Piece;
 
-public class Solder extends Piece {
-    public Solder(int row, int col, boolean side) {
+public class Soldier extends Piece {
+    public Soldier(int row, int col, boolean side) {
         super(row, col, side);
     }
 
