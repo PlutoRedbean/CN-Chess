@@ -81,5 +81,5 @@ public abstract class Piece {
         this.col = col;
     }
 
-    public abstract boolean isValidMove(int targetRow, int targetCol, Piece[][] board);
+    public abstract boolean isValidMove(int targetRow, int targetCol, Board board);
 }

@@ -1,5 +1,7 @@
 package Piece;
 
+import Board.Board;
+
 public class Advisor extends Piece {
     public Advisor(int row, int col, boolean side) {
         super(row, col, side);
@@ -12,7 +14,7 @@ public class Advisor extends Piece {
     }
 
     @Override
-    public boolean isValidMove(int targetRow, int targetCol, Piece[][] board) {
+    public boolean isValidMove(int targetRow, int targetCol, Board board) {
         return true;
     }
 }

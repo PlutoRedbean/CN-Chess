@@ -1,5 +1,7 @@
 package Piece;
 
+import Board.Board;
+
 public class Soldier extends Piece {
     public Soldier(int row, int col, boolean side) {
         super(row, col, side);
@@ -37,7 +39,7 @@ public class Soldier extends Piece {
     }
 
     @Override
-    public boolean isValidMove(int targetRow, int targetCol, Piece[][] board) {
+    public boolean isValidMove(int targetRow, int targetCol, Board board) {
         if (isCrossRiver()) {
             return isAdvance(targetRow, targetCol) || isTurn(targetRow, targetCol);
         } else {

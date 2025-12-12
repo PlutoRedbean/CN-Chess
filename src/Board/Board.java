@@ -48,7 +48,7 @@ public class Board extends Canvas {
             if (clickedPiece != null && clickedPiece.getSide() == isRedTurn) {
                 selectedPiece = clickedPiece;
                 repaint();
-            } else if (selectedPiece.isValidMove(row, col, pieces)) {
+            } else if (selectedPiece.isValidMove(row, col, this)) {
                 movePiece(selectedPiece, row, col);
             }
         }
