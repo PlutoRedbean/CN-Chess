@@ -24,6 +24,7 @@ public class Soldier extends Piece {
         return false;
     }
 
+    // Check if the soldier has crossed the river
     private boolean isCrossRiver() {
         if (side == RED) {
             return row <= 4;
