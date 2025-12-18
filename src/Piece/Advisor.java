@@ -14,7 +14,7 @@ public class Advisor extends Piece {
     }
     
     private boolean isDiagonal(int targetRow, int targetCol) {
-        return Math.abs(targetRow - getRow()) == 1 && Math.abs(targetCol - getCol()) == 1;
+        return Math.abs(targetRow - row) == 1 && Math.abs(targetCol - col) == 1;
     }
 
     private boolean isInPalace(int targetRow, int targetCol) {

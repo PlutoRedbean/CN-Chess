@@ -14,12 +14,12 @@ public class Elephant extends Piece {
     }
 
     private boolean isTianShape(int targetRow, int targetCol) {
-        return Math.abs(targetRow - getRow()) == 2 && Math.abs(targetCol - getCol()) == 2;
+        return Math.abs(targetRow - row) == 2 && Math.abs(targetCol - col) == 2;
     }
     
     private boolean isEyeBlocked(int targetRow, int targetCol, Board board) {
-        int eyeRow = (getRow() + targetRow) / 2;
-        int eyeCol = (getCol() + targetCol) / 2;
+        int eyeRow = (row + targetRow) / 2;
+        int eyeCol = (col + targetCol) / 2;
         return board.getPiece(eyeRow, eyeCol) != null;
     }
 
