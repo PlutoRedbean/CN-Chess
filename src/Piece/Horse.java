@@ -7,6 +7,12 @@ public class Horse extends Piece {
         super(row, col, side);
     }
 
+    @Override
+    String getLabel() {
+        if (side == Piece.RED) return "傌";
+        else return "馬";
+    }
+
     private boolean isVertical(int targetRow, int targetCol) {
         if (Math.abs(targetCol - col) != 1 || Math.abs(targetRow - row) != 2)
             return false;
@@ -29,12 +35,6 @@ public class Horse extends Piece {
         }
         
         return true;
-    }
-
-    @Override
-    String getLabel() {
-        if (side == Piece.RED) return "傌";
-        else return "馬";
     }
 
     @Override
