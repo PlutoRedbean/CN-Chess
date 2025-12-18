@@ -23,11 +23,9 @@ public class Horse extends Piece {
 
     private boolean isBlocked(int targetRow, int targetCol, Board board) {
         if (isVertical(targetRow, targetCol)) {
-            return board.getPiece(row + 1, col) != null ||
-                   board.getPiece(row - 1, col) != null;
+            return board.getPiece((row + targetRow) / 2, col) != null;
         } else if (isHorizontal(targetRow, targetCol)) {
-            return board.getPiece(row, col + 1) != null ||
-                   board.getPiece(row, col - 1) != null;
+            return board.getPiece(row, (col + targetCol) / 2) != null;
         }
         
         return true;
