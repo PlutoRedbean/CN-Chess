@@ -4,6 +4,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import Piece.Piece;
+import Piece.General;
 
 public class Board extends Canvas {
     public static final int ROWS = 10;
@@ -49,9 +50,72 @@ public class Board extends Canvas {
                 selectedPiece = clickedPiece;
                 repaint();
             } else if (selectedPiece.isValidMove(row, col, this)) {
-                movePiece(selectedPiece, row, col);
+                if (isMoveSafe(selectedPiece, row, col)) {
+                    movePiece(selectedPiece, row, col); // 只有两层都通过才真正移动
+                }
             }
         }
+    }
+
+    private boolean isOpposingGeneral() {
+        Piece redGeneral = null;
+        Piece blackGeneral = null;
+
+        for (int c = 3; c <= 5; c++) {
+            redGeneral = null;
+            blackGeneral = null;
+            
+            for (int r = 0; r < ROWS; r++) {
+                Piece p = pieces[r][c];
+                if (p != null) {
+                    if (p instanceof General) {
+                        if (p.getSide() == Piece.RED) redGeneral = p;
+                        else blackGeneral = p;
+                    }
+                }
+            }
+
+            if (redGeneral != null && blackGeneral != null) {
+                int r1 = redGeneral.getRow();
+                int r2 = blackGeneral.getRow();
+                int min = Math.min(r1, r2);
+                int max = Math.max(r1, r2);
+
+                boolean blocked = false;
+                for (int r = min + 1; r < max; r++) {
+                    if (pieces[r][c] != null) {
+                        blocked = true;
+                        break;
+                    }
+                }
+
+                if (!blocked) return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isMoveSafe(Piece piece, int targetRow, int targetCol) {
+        int oldRow = piece.getRow();
+        int oldCol = piece.getCol();
+        Piece targetPiece = pieces[targetRow][targetCol];
+
+        // 1. 模拟移动
+        // A. 从旧位置移除
+        pieces[oldRow][oldCol] = null;
+        // B. 移动到新位置 (可能会覆盖吃掉 targetPiece)
+        pieces[targetRow][targetCol] = piece;
+        // C. 更新棋子内部坐标
+        piece.setPos(targetRow, targetCol);
+
+        boolean isSafe = !isOpposingGeneral();
+
+        // 2. 回滚状态
+        piece.setPos(oldRow, oldCol);               // 恢复棋子坐标
+        pieces[oldRow][oldCol] = piece;             // 恢复原位置棋子
+        pieces[targetRow][targetCol] = targetPiece; // 恢复目标位置棋子（被吃的吐出来）
+
+        return isSafe;
     }
 
     private void movePiece(Piece p, int targetRow, int targetCol) {
