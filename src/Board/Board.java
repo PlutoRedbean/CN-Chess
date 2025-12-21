@@ -18,6 +18,11 @@ public class Board extends Canvas {
     private double cellW, cellH;
     private int borderLeft, borderTop;
 
+    // [新增] 游戏状态监听器
+    private GameListener gameListener;
+    // [新增] 游戏是否结束的标记，防止结束了还能走棋
+    private boolean isGameOver = false;
+
     public Board() {
         addMouseListener(new MouseAdapter() {
             @Override
@@ -27,7 +32,14 @@ public class Board extends Canvas {
         });
     }
 
+    public void setGameListener(GameListener listener) {
+        this.gameListener = listener;
+    }
+
     private void handleMouseClick(int x, int y) {
+
+        if (isGameOver) return; // 游戏结束后不处理点击
+        
         // 四舍五入判断点击了哪个交叉点范围
         int col = (int) Math.round((x - borderLeft) / cellW);
         int row = (int) Math.round((y - borderTop) / cellH);
@@ -50,8 +62,27 @@ public class Board extends Canvas {
                 selectedPiece = clickedPiece;
                 repaint();
             } else if (selectedPiece.isValidMove(row, col, this)) {
-                if (isMoveSafe(selectedPiece, row, col)) {
-                    movePiece(selectedPiece, row, col); // 只有两层都通过才真正移动
+                // [修改] 获胜逻辑判断
+                // 如果目标位置有棋子，且是 General，则判定获胜
+                boolean isWinMove = false;
+                if (clickedPiece instanceof General) {
+                    // 只要吃掉了将帅，游戏立即结束，不需要判断 isMoveSafe (因为对方输了)
+                    isWinMove = true;
+                }
+
+                // 普通移动需要检查是否送将，但如果是绝杀(吃将)，则允许移动
+                if (isWinMove || isMoveSafe(selectedPiece, row, col)) {
+                    movePiece(selectedPiece, row, col); 
+                    
+                    // [新增] 触发获胜事件
+                    if (isWinMove) {
+                        isGameOver = true;
+                        if (gameListener != null) {
+                            // 谁的回合谁获胜（因为是当前行动方吃掉了对方）
+                            // 注意：movePiece 内部已经切换了 isRedTurn，所以这里赢家是 !isRedTurn
+                            gameListener.onGameOver(!isRedTurn);
+                        }
+                    }
                 }
             }
         }

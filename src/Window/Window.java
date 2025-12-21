@@ -2,10 +2,13 @@ package Window;
 import java.awt.*;
 import java.awt.event.*;
 
+import javax.swing.JOptionPane;
+
 import Board.Board;
+import Board.GameListener;
 import Piece.Piece;
 
-public class Window extends Frame {
+public class Window extends Frame implements GameListener {
     private int width;
     private int height;
     private Board board;
@@ -26,6 +29,7 @@ public class Window extends Frame {
         setSize(width, height);
 
         board = new Board();
+        board.setGameListener(this);
         add(board, BorderLayout.CENTER);
 
         addWindowListener(new WindowAdapter() {
@@ -59,5 +63,17 @@ public class Window extends Frame {
 
     public void remove_piece(int row, int col) {
         board.setPiece(row, col, null);
+    }
+
+    @Override
+    public void onGameOver(boolean redWins) {
+        String winner = redWins ? "红方" : "黑方";
+        // 弹出对话框
+        JOptionPane.showMessageDialog(this, 
+            "游戏结束！\n" + winner + " 获胜！", 
+            "获胜通知", 
+            JOptionPane.INFORMATION_MESSAGE);
+            
+        // 这里可以扩展：询问是否重来一局
     }
 }
