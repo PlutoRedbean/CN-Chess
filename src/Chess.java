@@ -1,3 +1,5 @@
+import javax.swing.SwingUtilities;
+
 import Piece.Advisor;
 import Piece.Cannon;
 import Piece.Chariot;
@@ -10,8 +12,14 @@ import Window.Window;
 
 public class Chess {
     public static void main(String[] args) throws Exception {
-        Window window = new Window(1000, 1000);
-        pieces_init(window);
+        SwingUtilities.invokeLater(() -> {
+            try {
+                Window window = new Window(1000, 1000);
+                pieces_init(window);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private static void pieces_init(Window window) {

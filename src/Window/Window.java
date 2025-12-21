@@ -1,14 +1,14 @@
 package Window;
 import java.awt.*;
-import java.awt.event.*;
 
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import Board.Board;
 import Board.GameListener;
 import Piece.Piece;
 
-public class Window extends Frame implements GameListener {
+public class Window extends JFrame implements GameListener {
     private int width;
     private int height;
     private Board board;
@@ -17,7 +17,7 @@ public class Window extends Frame implements GameListener {
         this.width = width;
         this.height = height;
         window_init();
-        window_update();
+        // window_update();
     }
 
     public Window() {
@@ -28,28 +28,17 @@ public class Window extends Frame implements GameListener {
         setTitle("中国象棋");
         setSize(width, height);
 
+        setLocationRelativeTo(null); 
+
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
         board = new Board();
         board.setGameListener(this);
-        add(board, BorderLayout.CENTER);
 
-        addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                System.exit(0);
-            }
-        });
+        getContentPane().setLayout(new BorderLayout());
+        getContentPane().add(board, BorderLayout.CENTER);
 
         setVisible(true);
-    }
-
-    private void window_update() {
-        addComponentListener(new ComponentAdapter() {
-            public void componentResized(ComponentEvent e) {
-                width = getWidth();
-                height = getHeight();
-                board.revalidate();
-                board.repaint();
-            }
-        });
     }
 
     /**

@@ -2,11 +2,12 @@ package Board;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import javax.swing.JPanel;
 
 import Piece.Piece;
 import Piece.General;
 
-public class Board extends Canvas {
+public class Board extends JPanel {
     public static final int ROWS = 10;
     public static final int COLS = 9;
 
@@ -24,6 +25,8 @@ public class Board extends Canvas {
     private boolean isGameOver = false;
 
     public Board() {
+        setBackground(Color.WHITE);
+
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -270,7 +273,10 @@ public class Board extends Canvas {
     }
 
     @Override
-    public void paint(Graphics g) {
+    protected void paintComponent(Graphics g) {
+        // [新增] 必须先调用父类方法，否则可能出现残影或背景不透明问题
+        super.paintComponent(g);
+        
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                             RenderingHints.VALUE_ANTIALIAS_ON);
