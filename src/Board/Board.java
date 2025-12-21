@@ -276,7 +276,7 @@ public class Board extends JPanel {
     protected void paintComponent(Graphics g) {
         // [新增] 必须先调用父类方法，否则可能出现残影或背景不透明问题
         super.paintComponent(g);
-        
+
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                             RenderingHints.VALUE_ANTIALIAS_ON);
@@ -308,6 +308,11 @@ public class Board extends JPanel {
         
         paint_pieces(g2, borderTop, borderBottom, borderLeft, borderRight, cellH, cellW);
         
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(800, 800);
     }
 }
 

@@ -3,6 +3,7 @@ import java.awt.*;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JSplitPane;
 
 import Board.Board;
 import Board.GameListener;
@@ -13,11 +14,13 @@ public class Window extends JFrame implements GameListener {
     private int height;
     private Board board;
 
+    private SidePanel sidePanel;
+    private JSplitPane splitPane;
+
     public Window(int width, int height) {
         this.width = width;
         this.height = height;
         window_init();
-        // window_update();
     }
 
     public Window() {
@@ -35,10 +38,23 @@ public class Window extends JFrame implements GameListener {
         board = new Board();
         board.setGameListener(this);
 
+        sidePanel = new SidePanel();
+        
+        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, board, sidePanel);
+
+        splitPane.setResizeWeight(1.0); // 1.0 表示：当窗口变大时，新增的空间全部给左边(棋盘)
+        
+        splitPane.setContinuousLayout(true);
+        splitPane.setBorder(null);
+
         getContentPane().setLayout(new BorderLayout());
-        getContentPane().add(board, BorderLayout.CENTER);
+        getContentPane().add(splitPane, BorderLayout.CENTER);
 
         setVisible(true);
+
+        splitPane.setDividerLocation(0.75);
+        
+        sidePanel.appendMessage("系统: 欢迎来到中国象棋！");
     }
 
     /**
@@ -57,12 +73,13 @@ public class Window extends JFrame implements GameListener {
     @Override
     public void onGameOver(boolean redWins) {
         String winner = redWins ? "红方" : "黑方";
-        // 弹出对话框
+
+        sidePanel.appendMessage("系统: 游戏结束，" + winner + "获胜！");
+        sidePanel.setStatus("游戏结束 - " + winner + "胜");
+
         JOptionPane.showMessageDialog(this, 
             "游戏结束！\n" + winner + " 获胜！", 
             "获胜通知", 
             JOptionPane.INFORMATION_MESSAGE);
-            
-        // 这里可以扩展：询问是否重来一局
     }
 }
