@@ -5,11 +5,16 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
 
+import Model.User;
+
 public class SidePanel extends JPanel {
     private JTextArea chatArea;
     private JTextField inputField;
     private JButton sendButton;
     private JLabel statusLabel;
+
+    private JButton loginButton;
+    private User currentUser;
 
     public SidePanel() {
         setLayout(new BorderLayout(5, 5));
@@ -21,19 +26,35 @@ public class SidePanel extends JPanel {
     }
 
     private void initTopPanel() {
-        JPanel topPanel = new JPanel(new GridLayout(2, 1));
+        JPanel topPanel = new JPanel(new GridLayout(3, 1));
         topPanel.setOpaque(false);
 
         JLabel title = new JLabel("中国象棋 Online", JLabel.CENTER);
         title.setFont(new Font("SimHei", Font.BOLD, 18));
         
-        statusLabel = new JLabel("等待连接...", JLabel.CENTER);
-        statusLabel.setForeground(Color.DARK_GRAY);
-
+        statusLabel = new JLabel("未登录", JLabel.CENTER);
+        statusLabel.setForeground(Color.RED);
+        
+        loginButton = new JButton("点击登录");
+        
         topPanel.add(title);
         topPanel.add(statusLabel);
+        topPanel.add(loginButton);
 
         add(topPanel, BorderLayout.NORTH);
+    }
+
+    public void setLoginAction(ActionListener action) {
+        loginButton.addActionListener(action);
+    }
+
+    public void onLoginSuccess(User user) {
+        this.currentUser = user;
+        statusLabel.setText("用户: " + user.getUsername());
+        statusLabel.setForeground(new Color(0, 100, 0)); // 深绿色
+        loginButton.setText("胜率: " + user.getWinRateStr());
+        loginButton.setEnabled(false); // 登录后禁用按钮，或者改为“注销”
+        appendMessage("系统: 欢迎回来，" + user.getUsername());
     }
 
     private void initChatPanel() {
