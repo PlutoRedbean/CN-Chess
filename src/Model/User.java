@@ -21,6 +21,7 @@ public class User implements Serializable {
     }
 
     // Getters
+    public int getId() { return id; }
     public String getUsername() { return username; }
     public int getWins() { return wins; }
     public int getTotalGames() { return totalGames; }

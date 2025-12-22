@@ -4,8 +4,16 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JPanel;
 
+import Common.Cmd;
+import Network.NetworkClient;
 import Piece.Piece;
+import Piece.Soldier;
+import Piece.Advisor;
+import Piece.Cannon;
+import Piece.Chariot;
+import Piece.Elephant;
 import Piece.General;
+import Piece.Horse;
 
 public class Board extends JPanel {
     public static final int ROWS = 10;
@@ -19,9 +27,11 @@ public class Board extends JPanel {
     private double cellW, cellH;
     private int borderLeft, borderTop;
 
-    // [新增] 游戏状态监听器
+    private NetworkClient netClient;
+    private boolean mySide;
+    private boolean isOnline = false;
+
     private GameListener gameListener;
-    // [新增] 游戏是否结束的标记，防止结束了还能走棋
     private boolean isGameOver = false;
 
     public Board() {
@@ -35,6 +45,58 @@ public class Board extends JPanel {
         });
     }
 
+    public void initGame(boolean isRed) {
+        this.mySide = isRed;
+        this.isOnline = true;
+        reset();
+        repaint();
+    }
+
+    public void reset() {
+        // 清空棋子数组
+        for(int r=0; r<ROWS; r++) {
+            for(int c=0; c<COLS; c++) {
+                pieces[r][c] = null;
+            }
+        }
+        selectedPiece = null;
+        isGameOver = false;
+        isRedTurn = true; // 红方先行
+        
+        initPiecesStandard();
+        repaint();
+    }
+
+    private void initPiecesStandard() {
+        // 黑方
+        setPiece(0, 0, new Chariot(0, 0, Piece.BLACK));
+        setPiece(0, 1, new Horse(0, 1, Piece.BLACK));
+        setPiece(0, 2, new Elephant(0, 2, Piece.BLACK));
+        setPiece(0, 3, new Advisor(0, 3, Piece.BLACK));
+        setPiece(0, 4, new General(0, 4, Piece.BLACK));
+        setPiece(0, 5, new Advisor(0, 5, Piece.BLACK));
+        setPiece(0, 6, new Elephant(0, 6, Piece.BLACK));
+        setPiece(0, 7, new Horse(0, 7, Piece.BLACK));
+        setPiece(0, 8, new Chariot(0, 8, Piece.BLACK));
+        setPiece(2, 1, new Cannon(2, 1, Piece.BLACK));
+        setPiece(2, 7, new Cannon(2, 7, Piece.BLACK));
+        for(int i=0; i<=8; i+=2) setPiece(3, i, new Soldier(3, i, Piece.BLACK));
+
+        // 红方
+        setPiece(9, 0, new Chariot(9, 0, Piece.RED));
+        setPiece(9, 1, new Horse(9, 1, Piece.RED));
+        setPiece(9, 2, new Elephant(9, 2, Piece.RED));
+        setPiece(9, 3, new Advisor(9, 3, Piece.RED));
+        setPiece(9, 4, new General(9, 4, Piece.RED));
+        setPiece(9, 5, new Advisor(9, 5, Piece.RED));
+        setPiece(9, 6, new Elephant(9, 6, Piece.RED));
+        setPiece(9, 7, new Horse(9, 7, Piece.RED));
+        setPiece(9, 8, new Chariot(9, 8, Piece.RED));
+        setPiece(7, 1, new Cannon(7, 1, Piece.RED));
+        setPiece(7, 7, new Cannon(7, 7, Piece.RED));
+        for(int i=0; i<=8; i+=2) setPiece(6, i, new Soldier(6, i, Piece.RED));
+    }
+    
     public void setGameListener(GameListener listener) {
         this.gameListener = listener;
     }
@@ -42,6 +104,8 @@ public class Board extends JPanel {
     private void handleMouseClick(int x, int y) {
 
         if (isGameOver) return; // 游戏结束后不处理点击
+
+        if (isOnline && isRedTurn != mySide) return;
         
         // 四舍五入判断点击了哪个交叉点范围
         int col = (int) Math.round((x - borderLeft) / cellW);
@@ -65,19 +129,26 @@ public class Board extends JPanel {
                 selectedPiece = clickedPiece;
                 repaint();
             } else if (selectedPiece.isValidMove(row, col, this)) {
-                // [修改] 获胜逻辑判断
-                // 如果目标位置有棋子，且是 General，则判定获胜
                 boolean isWinMove = false;
                 if (clickedPiece instanceof General) {
-                    // 只要吃掉了将帅，游戏立即结束，不需要判断 isMoveSafe (因为对方输了)
                     isWinMove = true;
                 }
 
-                // 普通移动需要检查是否送将，但如果是绝杀(吃将)，则允许移动
                 if (isWinMove || isMoveSafe(selectedPiece, row, col)) {
-                    movePiece(selectedPiece, row, col); 
+                    if (isOnline) {
+                        netClient.sendMove(selectedPiece.getRow(), selectedPiece.getCol(), row, col);
+                        
+                        boolean isWin = (clickedPiece instanceof General);
+                        movePiece(selectedPiece, row, col);
+                        
+                        if (isWin) {
+                            String winner = mySide ? Cmd.RED_WIN : Cmd.BLACK_WIN;
+                            netClient.sendWin(winner);
+                        }
+                    } else {
+                        movePiece(selectedPiece, row, col);
+                    }
                     
-                    // [新增] 触发获胜事件
                     if (isWinMove) {
                         isGameOver = true;
                         if (gameListener != null) {
@@ -91,6 +162,15 @@ public class Board extends JPanel {
         }
     }
 
+    public void setNetworkClient(NetworkClient nc) { this.netClient = nc; }
+
+    public void netMovePiece(int r1, int c1, int r2, int c2) {
+        Piece p = pieces[r1][c1];
+        if (p != null) {
+            movePiece(p, r2, c2); 
+        }
+    }
+    
     private boolean isOpposingGeneral() {
         Piece redGeneral = null;
         Piece blackGeneral = null;
@@ -134,17 +214,12 @@ public class Board extends JPanel {
         int oldCol = piece.getCol();
         Piece targetPiece = pieces[targetRow][targetCol];
 
-        // 1. 模拟移动
-        // A. 从旧位置移除
         pieces[oldRow][oldCol] = null;
-        // B. 移动到新位置 (可能会覆盖吃掉 targetPiece)
         pieces[targetRow][targetCol] = piece;
-        // C. 更新棋子内部坐标
         piece.setPos(targetRow, targetCol);
 
         boolean isSafe = !isOpposingGeneral();
 
-        // 2. 回滚状态
         piece.setPos(oldRow, oldCol);               // 恢复棋子坐标
         pieces[oldRow][oldCol] = piece;             // 恢复原位置棋子
         pieces[targetRow][targetCol] = targetPiece; // 恢复目标位置棋子（被吃的吐出来）
@@ -274,7 +349,6 @@ public class Board extends JPanel {
 
     @Override
     protected void paintComponent(Graphics g) {
-        // [新增] 必须先调用父类方法，否则可能出现残影或背景不透明问题
         super.paintComponent(g);
 
         Graphics2D g2 = (Graphics2D) g;

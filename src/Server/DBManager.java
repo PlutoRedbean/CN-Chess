@@ -6,7 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DBManager {
-    private static final String URL = "jdbc:mysql://www.lhh-redbean.cn:3306/chess_game?useSSL=false&serverTimezone=UTC";
+    // 在服务端运行，故使用localhost
+    private static final String URL = "jdbc:mysql://localhost:3306/chess_game?useSSL=false&serverTimezone=UTC";
     private static final String DB_USER = "chess_game";       // 数据库用户名
     private static final String DB_PASS = "D7yYNNDrZHmi28zz"; // 数据库密码
 
@@ -23,10 +24,6 @@ public class DBManager {
         return DriverManager.getConnection(URL, DB_USER, DB_PASS);
     }
 
-    /**
-     * 用户登录
-     * @return 成功返回 User 对象，失败返回 null
-     */
     public User login(String username, String password) {
         String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
         try (Connection conn = getConnection();
@@ -50,9 +47,6 @@ public class DBManager {
         return null;
     }
 
-    /**
-     * 用户注册
-     */
     public boolean register(String username, String password) {
         String sql = "INSERT INTO users (username, password) VALUES (?, ?)";
         try (Connection conn = getConnection();
@@ -90,5 +84,32 @@ public class DBManager {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public void updateStats(int userId, boolean isWin) {
+        String sql = "UPDATE users SET wins = wins + ?, total_games = total_games + 1, win_rate = (wins/total_games)*100 WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, isWin ? 1 : 0);
+            pstmt.setInt(2, userId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void recordGame(int p1Id, int p2Id, int winnerId) {
+        String sql = "INSERT INTO games (player1_id, player2_id, winner_id, start_time) VALUES (?, ?, ?, NOW())";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, p1Id);
+            pstmt.setInt(2, p2Id);
+            pstmt.setInt(3, winnerId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -7,6 +7,7 @@ import javax.swing.JSplitPane;
 
 import Board.Board;
 import Board.GameListener;
+import Network.NetworkClient;
 import Piece.Piece;
 import Window.LoginDialog;
 
@@ -17,6 +18,9 @@ public class Window extends JFrame implements GameListener {
 
     private SidePanel sidePanel;
     private JSplitPane splitPane;
+    private NetworkClient netClient;
+
+    private boolean isOnlineMode = false;
 
     public Window(int width, int height) {
         this.width = width;
@@ -58,6 +62,11 @@ public class Window extends JFrame implements GameListener {
         splitPane.setDividerLocation(0.75);
         
         sidePanel.appendMessage("系统: 欢迎来到中国象棋！");
+
+        netClient = new NetworkClient(this);
+        netClient.connect();
+        
+        board.setNetworkClient(netClient);
     }
 
     private void handleLoginRequest() {
@@ -67,17 +76,11 @@ public class Window extends JFrame implements GameListener {
         if (dialog.isSucceeded()) {
             String user = dialog.getUsername();
             String pass = dialog.getPassword();
-            boolean isLogin = dialog.isLoginAction();
 
-            System.out.println("用户尝试: " + (isLogin ? "登录" : "注册"));
-            System.out.println("账号: " + user + ", 密码: " + pass);
-            
-            // 模拟登录成功效果 (仅供UI测试)
-            if (!user.isEmpty()) {
-                Model.User mockUser = new Model.User(1, user, 5, 10); 
-                sidePanel.onLoginSuccess(mockUser);
+            if (dialog.isLoginAction()) {
+                netClient.sendLogin(user, pass);
             } else {
-                JOptionPane.showMessageDialog(this, "用户名不能为空");
+                netClient.sendRegister(user, pass);
             }
         }
     }
@@ -95,6 +98,15 @@ public class Window extends JFrame implements GameListener {
         board.setPiece(row, col, null);
     }
 
+    public void startGame(boolean isRedSide) {
+        this.isOnlineMode = true;
+        board.initGame(isRedSide); // 重置棋盘并设置我方颜色
+        sidePanel.appendMessage("系统: 游戏开始！");
+    }
+
+    public SidePanel getSidePanel() { return sidePanel; }
+    public Board getBoard() { return board; }
+    
     @Override
     public void onGameOver(boolean redWins) {
         String winner = redWins ? "红方" : "黑方";

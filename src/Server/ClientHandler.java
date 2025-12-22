@@ -1,0 +1,90 @@
+package Server;
+
+import Common.Cmd;
+import Model.User;
+import java.io.*;
+import java.net.Socket;
+
+public class ClientHandler extends Thread {
+    private Socket socket;
+    private GameServer server;
+    private PrintWriter out;
+    private BufferedReader in;
+    private User user; // 当前登录用户
+    private GameSession currentSession;
+
+    public ClientHandler(Socket socket, GameServer server) {
+        this.socket = socket;
+        this.server = server;
+    }
+
+    public void run() {
+        try {
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            out = new PrintWriter(socket.getOutputStream(), true);
+
+            String line;
+            while ((line = in.readLine()) != null) {
+                String[] parts = line.split("\\|", 2);
+                String cmd = parts[0];
+                String data = parts.length > 1 ? parts[1] : "";
+
+                handleCommand(cmd, data);
+            }
+        } catch (IOException e) {
+            System.out.println("Client disconnected");
+        } finally {
+            try { socket.close(); } catch (IOException e) {}
+            server.removeClient(this);
+        }
+    }
+
+    private void handleCommand(String cmd, String data) {
+        String[] parts = data.split("\\|");
+        
+        switch (cmd) {
+            case Cmd.LOGIN:
+                String[] auth = data.split("\\|");
+                if(auth.length < 2) return;
+                // 调用数据库验证
+                User u = new DBManager().login(auth[0], auth[1]);
+                if (u != null) {
+                    this.user = u;
+                    sendMessage(Cmd.LOGIN + "|SUCCESS|" + u.toString()); // 简单返回
+                    server.addToQueue(this); // 登录成功直接进入匹配队列
+                } else {
+                    sendMessage(Cmd.FAIL + "|登录失败，账号或密码错误");
+                }
+                break;
+                
+            case Cmd.REGISTER:
+                if(parts.length < 2) return;
+                boolean regSuccess = new DBManager().register(parts[0], parts[1]);
+                if (regSuccess) {
+                    sendMessage(Cmd.REGISTER + "|SUCCESS");
+                } else {
+                    sendMessage(Cmd.REGISTER + "|FAIL|用户名已存在");
+                }
+                break;
+                
+            case Cmd.MOVE:
+                if (currentSession != null) currentSession.forwardMove(this, data);
+                break;
+
+            case Cmd.CHAT:
+                if (currentSession != null) currentSession.forwardChat(this, data);
+                break;
+                
+            case Cmd.GAMEOVER:
+                if (currentSession != null) currentSession.gameOver(data); 
+                break;
+        }
+    }
+
+    public void sendMessage(String msg) {
+        out.println(msg);
+    }
+    
+    public void setSession(GameSession session) { this.currentSession = session; }
+    public User getUser() { return user; }
+}
