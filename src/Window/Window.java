@@ -67,6 +67,12 @@ public class Window extends JFrame implements GameListener {
         netClient.connect();
         
         board.setNetworkClient(netClient);
+
+        sidePanel.setSendCallback(msg -> {
+            if (netClient != null) {
+                netClient.sendChat(msg);
+            }
+        });
     }
 
     private void handleLoginRequest() {
@@ -112,7 +118,6 @@ public class Window extends JFrame implements GameListener {
         String winner = redWins ? "红方" : "黑方";
 
         sidePanel.appendMessage("系统: 游戏结束，" + winner + "获胜！");
-        sidePanel.setStatus("游戏结束 - " + winner + "胜");
 
         JOptionPane.showMessageDialog(this, 
             "游戏结束！\n" + winner + " 获胜！", 

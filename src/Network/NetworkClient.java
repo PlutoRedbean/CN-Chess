@@ -1,6 +1,7 @@
 package Network;
 
 import Common.Cmd;
+import Model.User;
 import Window.Window;
 
 import javax.swing.JOptionPane;
@@ -28,15 +29,18 @@ public class NetworkClient {
                 out = new PrintWriter(socket.getOutputStream(), true);
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                window.getSidePanel().setStatus("已连接服务器，请登录");
+                SwingUtilities.invokeLater(() -> 
+                    window.getSidePanel().appendMessage("系统: 已连接服务器，请登录")
+                );
 
-                // 监听循环
                 String line;
                 while ((line = in.readLine()) != null) {
                     processMessage(line);
                 }
             } catch (IOException e) {
-                window.getSidePanel().setStatus("连接服务器失败");
+                SwingUtilities.invokeLater(() -> 
+                    window.getSidePanel().appendMessage("系统: 连接服务器失败")
+                );
                 e.printStackTrace();
             }
         }).start();
@@ -71,9 +75,22 @@ public class NetworkClient {
             switch (cmd) {
                 case Cmd.LOGIN:
                     if (data.startsWith("SUCCESS")) {
+                        // data 格式: SUCCESS|id,username,wins,totalGames
+                        String[] args = data.split("\\|");
+                        if (args.length > 1) {
+                            String[] uInfo = args[1].split(",");
+                            User me = new User(
+                                Integer.parseInt(uInfo[0]), // id
+                                uInfo[1],                   // username
+                                Integer.parseInt(uInfo[2]), // wins
+                                Integer.parseInt(uInfo[3])  // totalGames
+                            );
+                            window.getSidePanel().onLoginSuccess(me);
+                        }
                         window.getSidePanel().appendMessage("系统: 登录成功，正在匹配对手...");
                     }
                     break;
+                
                 case Cmd.REGISTER:
                     if (data.startsWith("SUCCESS")) {
                         window.getSidePanel().appendMessage("系统: 注册成功，请重新登录。");
@@ -82,28 +99,49 @@ public class NetworkClient {
                         JOptionPane.showMessageDialog(window, "注册失败：" + data);
                     }
                     break;
+                
                 case Cmd.FAIL:
                     window.getSidePanel().appendMessage("系统错误: " + data);
                     break;
+                
                 case Cmd.MATCH:
-                    boolean isRed = data.equals("RED");
-                    window.startGame(isRed); // 通知 Window 开始游戏
-                    window.getSidePanel().setStatus("对战开始！你是 " + (isRed ? "红方" : "黑方"));
+                    // data 格式: RED|id,username,wins,totalGames (这是对手的信息)
+                    String[] matchArgs = data.split("\\|");
+                    String colorStr = matchArgs[0];
+                    boolean isRed = colorStr.equals("RED");
+                    
+                    if (matchArgs.length > 1) {
+                        String[] uInfo = matchArgs[1].split(",");
+                        User opponent = new User(
+                            Integer.parseInt(uInfo[0]),
+                            uInfo[1],
+                            Integer.parseInt(uInfo[2]),
+                            Integer.parseInt(uInfo[3])
+                        );
+                        window.getSidePanel().onMatchStart(opponent);
+                    }
+
+                    window.startGame(isRed);
+                    window.getSidePanel().setMatchTitle("对战中"); 
+                    window.getSidePanel().appendMessage("系统: 对战开始！你是 " + (isRed ? "红方" : "黑方"));
                     break;
+                
                 case Cmd.MOVE:
-                    // data 格式: r1,c1,r2,c2
                     String[] pos = data.split(",");
                     window.getBoard().netMovePiece(
                         Integer.parseInt(pos[0]), Integer.parseInt(pos[1]),
                         Integer.parseInt(pos[2]), Integer.parseInt(pos[3])
                     );
                     break;
+                
                 case Cmd.CHAT:
                     window.getSidePanel().appendMessage(data);
                     break;
+                
                 case Cmd.GAMEOVER:
                     boolean redWins = data.equals(Cmd.RED_WIN);
                     window.onGameOver(redWins); 
+                    window.getSidePanel().onMatchEnd();
                     break;
             }
         });

@@ -50,8 +50,11 @@ public class ClientHandler extends Thread {
                 User u = new DBManager().login(auth[0], auth[1]);
                 if (u != null) {
                     this.user = u;
-                    sendMessage(Cmd.LOGIN + "|SUCCESS|" + u.toString()); // 简单返回
-                    server.addToQueue(this); // 登录成功直接进入匹配队列
+                    
+                    String userData = u.getId() + "," + u.getUsername() + "," + u.getWins() + "," + u.getTotalGames();
+                    sendMessage(Cmd.LOGIN + "|SUCCESS|" + userData); 
+                    
+                    server.addToQueue(this); 
                 } else {
                     sendMessage(Cmd.FAIL + "|登录失败，账号或密码错误");
                 }

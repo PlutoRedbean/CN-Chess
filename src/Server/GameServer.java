@@ -41,9 +41,16 @@ public class GameServer {
             p1.setSession(session);
             p2.setSession(session);
 
-            // 通知客户端开始，p1红方先手，p2黑方后手
-            p1.sendMessage(Cmd.MATCH + "|RED");
-            p2.sendMessage(Cmd.MATCH + "|BLACK");
+            // 注意：这里需要确保 User 对象不为空，登录逻辑保证了这一点
+            String p1Data = p1.getUser().getId() + "," + p1.getUser().getUsername() + "," + 
+                            p1.getUser().getWins() + "," + p1.getUser().getTotalGames();
+            
+            String p2Data = p2.getUser().getId() + "," + p2.getUser().getUsername() + "," + 
+                            p2.getUser().getWins() + "," + p2.getUser().getTotalGames();
+
+            // 格式: MATCH | 颜色 | 对手信息
+            p1.sendMessage(Cmd.MATCH + "|RED|" + p2Data);   // 告诉 p1 对手是 p2
+            p2.sendMessage(Cmd.MATCH + "|BLACK|" + p1Data); // 告诉 p2 对手是 p1
         }
     }
 
