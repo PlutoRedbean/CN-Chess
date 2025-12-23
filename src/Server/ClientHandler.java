@@ -32,8 +32,13 @@ public class ClientHandler extends Thread {
                 handleCommand(cmd, data);
             }
         } catch (IOException e) {
-            System.out.println("Client disconnected");
+            System.out.println("检测到客户端异常断开: " + (user != null ? user.getUsername() : socket.getInetAddress()));
         } finally {
+            // 如果断开时还在对局中，则视为逃跑/掉线，触发判负
+            if (currentSession != null) {
+                currentSession.onAbnormalDisconnect(this);
+            }
+
             try { socket.close(); } catch (IOException e) {}
             server.removeClient(this);
         }
