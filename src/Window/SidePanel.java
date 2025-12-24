@@ -1,12 +1,15 @@
 package Window;
 
+import javax.sound.sampled.Mixer;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.function.Consumer;
+import java.util.Vector;
 
 import Model.User;
+import Network.VoiceClient;
 
 public class SidePanel extends JPanel {
     private JTextArea chatArea;
@@ -25,14 +28,41 @@ public class SidePanel extends JPanel {
     private User currentUser;
 
     private Consumer<String> sendCallback;
+
+    private JComboBox<String> comboMic;
+    private JComboBox<String> comboSpeaker;
+    private JSlider sliderVolume;
+    private VoiceClient voiceClient;
+    private java.util.List<Mixer.Info> micList;
+    private java.util.List<Mixer.Info> spkList;
     
     public SidePanel() {
+        // [增加] 初始化语音客户端
+        voiceClient = new VoiceClient();
+        
         setLayout(new BorderLayout(5, 5));
         setBackground(new Color(240, 240, 240)); 
         setBorder(new EmptyBorder(10, 10, 10, 10));
 
         initInfoPanel(); // 初始化顶部的信息区域
         initChatPanel(); // 初始化底部的聊天区域
+
+        SwingUtilities.invokeLater(this::startVoiceService);
+    }
+
+    // [修改] 启动语音服务 (现在只初始化网络监听，不打开 Mic/Speaker)
+    private void startVoiceService() {
+        Mixer.Info mic = micList.isEmpty() ? null : micList.get(0);
+        Mixer.Info spk = spkList.isEmpty() ? null : spkList.get(0);
+        
+        // 调用 init 而不是 start
+        voiceClient.init(mic, spk);
+        
+        // 读取当前按钮状态来决定是否打开设备
+        voiceClient.setMicEnabled(btnMic.isSelected());
+        voiceClient.setSpeakerEnabled(btnSpeaker.isSelected());
+        
+        System.out.println("语音服务已初始化，等待开关操作");
     }
 
     private void initInfoPanel() {
@@ -79,33 +109,109 @@ public class SidePanel extends JPanel {
     private void initVoicePanel(JPanel container) {
         container.add(Box.createVerticalStrut(10));
         
-        voicePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        voicePanel.setBorder(BorderFactory.createTitledBorder("语音聊天"));
+        // 使用垂直 BoxLayout 容纳更多控件
+        voicePanel = new JPanel();
+        voicePanel.setLayout(new BoxLayout(voicePanel, BoxLayout.Y_AXIS));
+        voicePanel.setBorder(BorderFactory.createTitledBorder("语音聊天设置"));
         voicePanel.setOpaque(false);
 
+        // --- 第一行：开关按钮 ---
+        JPanel switchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        switchPanel.setOpaque(false);
+        
         btnMic = new JToggleButton("麦克风: 关");
-        btnSpeaker = new JToggleButton("扬声器: 开");
+        btnSpeaker = new JToggleButton("扬声器: 关");
+        btnMic.setSelected(false); // 默认关闭接收
+        btnSpeaker.setSelected(false); // 默认关闭接收
 
-        // 简单的交互逻辑，仅改变文字，后续接入手册
+        switchPanel.add(btnMic);
+        switchPanel.add(btnSpeaker);
+        
+        // --- 第二行：设备选择 ---
+        JPanel devicePanel = new JPanel(new GridLayout(2, 1, 5, 5));
+        devicePanel.setOpaque(false);
+        devicePanel.setBorder(new EmptyBorder(0, 5, 0, 5));
+
+        // 获取设备列表
+        micList = voiceClient.getAudioInputDevices();
+        spkList = voiceClient.getAudioOutputDevices();
+
+        Vector<String> micNames = new Vector<>();
+        for(Mixer.Info info : micList) micNames.add("Mic: " + info.getName());
+        // 如果没找到设备，给个默认值
+        if(micNames.isEmpty()) micNames.add("默认麦克风");
+
+        Vector<String> spkNames = new Vector<>();
+        for(Mixer.Info info : spkList) spkNames.add("Spk: " + info.getName());
+        if(spkNames.isEmpty()) spkNames.add("默认扬声器");
+
+        comboMic = new JComboBox<>(micNames);
+        comboSpeaker = new JComboBox<>(spkNames);
+        // 稍微调小一点字体以免太宽
+        comboMic.setFont(new Font("Dialog", Font.PLAIN, 10));
+        comboSpeaker.setFont(new Font("Dialog", Font.PLAIN, 10));
+
+        devicePanel.add(comboMic);
+        devicePanel.add(comboSpeaker);
+
+        // --- 第三行：音量滑块 ---
+        JPanel volumePanel = new JPanel(new BorderLayout());
+        volumePanel.setOpaque(false);
+        volumePanel.setBorder(new EmptyBorder(5, 5, 0, 5));
+        JLabel lblVol = new JLabel("增益: ");
+        lblVol.setFont(new Font("Dialog", Font.PLAIN, 10));
+        
+        // 滑块范围 0 ~ 200， 默认 100 (代表 1.0)
+        sliderVolume = new JSlider(0, 200, 100);
+        sliderVolume.setOpaque(false);
+        sliderVolume.setToolTipText("自动音量增益调节");
+        
+        volumePanel.add(lblVol, BorderLayout.WEST);
+        volumePanel.add(sliderVolume, BorderLayout.CENTER);
+
+        // --- 添加所有组件到 voicePanel ---
+        voicePanel.add(switchPanel);
+        voicePanel.add(devicePanel);
+        voicePanel.add(volumePanel);
+
+        container.add(voicePanel);
+
+        // --- [修改] 事件监听逻辑 ---
+        
         btnMic.addActionListener(e -> {
             boolean selected = btnMic.isSelected();
             btnMic.setText(selected ? "麦克风: 开" : "麦克风: 关");
-            // TODO: 这里调用网络层的开启/关闭录音
+            // 实时控制 VoiceClient
+            voiceClient.setMicEnabled(selected);
         });
 
         btnSpeaker.addActionListener(e -> {
             boolean selected = btnSpeaker.isSelected();
-            btnSpeaker.setText(selected ? "扬声器: 关" : "扬声器: 开"); // 逻辑取反，按下通常表示静音，视习惯而定
+            btnSpeaker.setText(selected ? "扬声器: 关" : "扬声器: 开"); // 按钮文字逻辑
+            // 实时控制 VoiceClient
+            voiceClient.setSpeakerEnabled(!selected); // 注意：如果按钮显示"关"，意味着静音，所以 enabled = !selected
         });
         
-        // 默认状态
-        btnMic.setSelected(false);
-        btnSpeaker.setSelected(false); // 假设默认是开着的
+        // 设备切换监听 (重启服务以应用新设备)
+        ActionListener restartVoiceAction = e -> {
+            // 获取新设备
+            int micIdx = comboMic.getSelectedIndex();
+            int spkIdx = comboSpeaker.getSelectedIndex();
+            Mixer.Info micInfo = (micIdx >= 0 && micIdx < micList.size()) ? micList.get(micIdx) : null;
+            Mixer.Info spkInfo = (spkIdx >= 0 && spkIdx < spkList.size()) ? spkList.get(spkIdx) : null;
+            
+            // 更新设备配置 (内部会自动处理资源的释放和重连)
+            voiceClient.setDevice(micInfo, spkInfo);
+        };
 
-        voicePanel.add(btnMic);
-        voicePanel.add(btnSpeaker);
+        comboMic.addActionListener(restartVoiceAction);
+        comboSpeaker.addActionListener(restartVoiceAction);
 
-        container.add(voicePanel);
+        // 音量调节监听
+        sliderVolume.addChangeListener(e -> {
+            float gain = sliderVolume.getValue() / 100.0f;
+            voiceClient.setVolume(gain);
+        });
     }
 
     public void setSendCallback(Consumer<String> callback) {

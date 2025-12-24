@@ -10,8 +10,14 @@ public class GameServer {
     private Queue<ClientHandler> waitQueue = new LinkedList<>();
 
     public void start(int port) throws Exception {
+        // [增加] 启动语音服务器线程 (不会阻塞主线程)
+        new Thread(() -> {
+            new VoiceServer().start();
+        }).start();
+        
+        // --- 原有的 TCP 游戏服务器启动逻辑 ---
         ServerSocket ss = new ServerSocket(port);
-        System.out.println("服务器启动在端口: " + port);
+        System.out.println("游戏服务器(TCP) 启动在端口: " + port);
 
         while (true) {
             Socket socket = ss.accept();
