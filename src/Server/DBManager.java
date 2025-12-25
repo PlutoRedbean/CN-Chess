@@ -86,6 +86,55 @@ public class DBManager {
         return list;
     }
 
+    public List<User> getWinRateLeaderboard() {
+        List<User> list = new ArrayList<>();
+        // 简化 SQL：只筛选有过对局的玩家，不进行复杂计算和排序，避免 SQL 兼容性问题
+        String sql = "SELECT * FROM users WHERE total_games > 0";
+        
+        System.out.println("[DB] 正在执行排行榜查询 SQL: " + sql);
+
+        try (Connection conn = getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql)) {
+            
+            while (rs.next()) {
+                User u = new User(
+                    rs.getInt("id"),
+                    rs.getString("username"),
+                    rs.getInt("wins"),
+                    rs.getInt("total_games")
+                );
+                list.add(u);
+                // [调试] 打印查到的原始数据
+                System.out.println("[DB] 查到用户: " + u.getUsername() + " | 胜: " + u.getWins() + " | 总: " + u.getTotalGames());
+            }
+        } catch (SQLException e) {
+            System.err.println("[DB-Error] 查询排行榜失败: ");
+            e.printStackTrace();
+        }
+        
+        System.out.println("[DB] SQL 查询结束，共找到 " + list.size() + " 条记录。正在进行内存排序...");
+
+        // 在 Java 内存中排序：胜率优先(降序)，胜场次之(降序)
+        list.sort((u1, u2) -> {
+            double rate1 = (double) u1.getWins() / u1.getTotalGames();
+            double rate2 = (double) u2.getWins() / u2.getTotalGames();
+            
+            // 胜率不同，高的排前
+            if (Math.abs(rate1 - rate2) > 0.0001) {
+                return Double.compare(rate2, rate1); 
+            }
+            // 胜率相同，胜场多的排前
+            return Integer.compare(u2.getWins(), u1.getWins());
+        });
+
+        // 只取前 10 名
+        if (list.size() > 10) {
+            return list.subList(0, 10);
+        }
+        return list;
+    }
+
     public void updateStats(int userId, boolean isWin) {
         String sql = "UPDATE users SET wins = wins + ?, total_games = total_games + 1, win_rate = (wins/total_games)*100 WHERE id = ?";
         try (Connection conn = getConnection();

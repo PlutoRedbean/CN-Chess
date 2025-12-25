@@ -25,7 +25,7 @@ public class VoiceClient {
 
     private float masterGain = 1.0f; 
 
-    // [调试] 统计计数器，用于减少日志刷屏频率
+    // 统计计数器，用于减少日志刷屏频率
     private int sendLogCounter = 0;
     private int receiveLogCounter = 0;
 
@@ -81,7 +81,7 @@ public class VoiceClient {
             System.out.println("[Voice-System] Playback thread started.");
         }
 
-        // 2. [增加] 启动心跳线程 (确保服务端知道我的存在)
+        // 2. 启动心跳线程 (确保服务端知道我的存在)
         if (!isHeartbeatRunning) {
             isHeartbeatRunning = true;
             heartbeatThread = new Thread(this::runHeartbeatLoop);
@@ -90,7 +90,6 @@ public class VoiceClient {
         }
     }
 
-    // [增加] 心跳逻辑：每 3 秒发送一次 "PING"
     private void runHeartbeatLoop() {
         byte[] pingData = "PING".getBytes();
         DatagramPacket pingPacket = new DatagramPacket(pingData, pingData.length, serverAddress, VoiceConfig.SERVER_PORT);
@@ -174,14 +173,12 @@ public class VoiceClient {
             while (isCapturing) {
                 int bytesRead = microphone.read(buffer, 0, buffer.length);
                 if (bytesRead > 0) {
-                    // [调试] 计算音量
                     double volume = calculateRMSVolume(buffer);
                     
-                    // [调试] 每发送 20 个包打印一次，或者当音量很大时打印
                     sendLogCounter++;
                     if (sendLogCounter % 20 == 0 || volume > 20) {
-                         System.out.printf("[Voice-Mic] Read %d bytes | Vol: %.2f | Sending to %s:%d\n", 
-                             bytesRead, volume, VoiceConfig.SERVER_IP, VoiceConfig.SERVER_PORT);
+                        //  System.out.printf("[Voice-Mic] Read %d bytes | Vol: %.2f | Sending to %s:%d\n", 
+                            //  bytesRead, volume, VoiceConfig.SERVER_IP, VoiceConfig.SERVER_PORT);
                     }
 
                     DatagramPacket packet = new DatagramPacket(buffer, bytesRead, serverAddress, VoiceConfig.SERVER_PORT);
@@ -210,11 +207,10 @@ public class VoiceClient {
                 socket.receive(packet);
                 int len = packet.getLength();
                 
-                // [调试] 收到数据包
                 receiveLogCounter++;
                 if (receiveLogCounter % 20 == 0) {
-                    System.out.printf("[Voice-Net] Received packet from %s | Size: %d | SpeakerEnabled: %b\n", 
-                        packet.getAddress().getHostAddress(), len, isSpeakerEnabled);
+                    // System.out.printf("[Voice-Net] Received packet from %s | Size: %d | SpeakerEnabled: %b\n", 
+                        // packet.getAddress().getHostAddress(), len, isSpeakerEnabled);
                 }
 
                 if (isSpeakerEnabled) {
@@ -226,7 +222,6 @@ public class VoiceClient {
                     if (speaker != null && speaker.isOpen()) {
                         byte[] audioData = packet.getData();
                         
-                        // [调试] 播放前音量计算
                         double volumeBefore = calculateRMSVolume(audioData); // 仅计算前1024字节作为参考
                         
                         if (masterGain != 1.0f) {
@@ -235,9 +230,8 @@ public class VoiceClient {
                         
                         speaker.write(audioData, 0, len);
                         
-                        // [调试] 如果有声音在播放，打印日志
                         if (volumeBefore > 5 && receiveLogCounter % 10 == 0) {
-                             System.out.printf("[Voice-Spk] Writing audio. Raw Vol: %.2f\n", volumeBefore);
+                            //  System.out.printf("[Voice-Spk] Writing audio. Raw Vol: %.2f\n", volumeBefore);
                         }
                     } else {
                         // Speaker failed to open
@@ -289,7 +283,6 @@ public class VoiceClient {
         }
     }
 
-    // [调试] 计算RMS音量 (Root Mean Square)
     private double calculateRMSVolume(byte[] audioData) {
         long sum = 0;
         for (int i = 0; i < audioData.length; i += 2) {
