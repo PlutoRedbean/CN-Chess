@@ -35,13 +35,19 @@ public class ClientHandler extends Thread {
         } catch (IOException e) {
             System.out.println("检测到客户端异常断开: " + (user != null ? user.getUsername() : socket.getInetAddress()));
         } finally {
-            // 如果断开时还在对局中，则视为逃跑/掉线，触发判负
+            // 1. 如果还在对局中，处理判负
             if (currentSession != null) {
                 currentSession.onAbnormalDisconnect(this);
             }
 
-            try { socket.close(); } catch (IOException e) {}
+            // 2. 如果用户已登录，从在线列表中移除
+            if (user != null) {
+                server.unregisterUser(user.getId());
+            }
+
+            // 3. 移除匹配队列引用并关闭Socket
             server.removeClient(this);
+            try { socket.close(); } catch (IOException e) {}
         }
     }
 
@@ -55,6 +61,12 @@ public class ClientHandler extends Thread {
                 // 调用数据库验证
                 User u = new DBManager().login(auth[0], auth[1]);
                 if (u != null) {
+                    // 如果 registerUser 返回 false，说明该ID已经在 map 中了
+                    if (!server.registerUser(u, this)) {
+                        sendMessage(Cmd.FAIL + "|登录失败：该账号已在别处登录");
+                        return; // 结束本次处理，不赋值 this.user
+                    }
+                    
                     this.user = u;
                     
                     String userData = u.getId() + "," + u.getUsername() + "," + u.getWins() + "," + u.getTotalGames();
@@ -98,7 +110,7 @@ public class ClientHandler extends Thread {
         }
     }
 
-    // [修改] 修复因换行符导致客户端无法接收后续内容的问题
+    // 修复因换行符导致客户端无法接收后续内容的问题
     private void handleChatCommand(String cmdStr) {
         String command = cmdStr.trim();
         

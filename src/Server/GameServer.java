@@ -1,12 +1,17 @@
 package Server;
 
 import Common.Cmd;
+import Model.User;
+
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GameServer {
+    private Map<Integer, ClientHandler> onlineUsers = new ConcurrentHashMap<>();
     private Queue<ClientHandler> waitQueue = new LinkedList<>();
 
     public void start(int port) throws Exception {
@@ -22,6 +27,24 @@ public class GameServer {
         while (true) {
             Socket socket = ss.accept();
             new ClientHandler(socket, this).start();
+        }
+    }
+
+    // 返回 true 表示注册成功（之前不在线），返回 false 表示失败（已经在线）
+    public synchronized boolean registerUser(User user, ClientHandler handler) {
+        if (onlineUsers.containsKey(user.getId())) {
+            System.out.println("用户重复登录被拒绝: " + user.getUsername());
+            return false;
+        }
+        onlineUsers.put(user.getId(), handler);
+        return true;
+    }
+
+    // 用户下线时移除状态
+    public synchronized void unregisterUser(int userId) {
+        if (onlineUsers.containsKey(userId)) {
+            onlineUsers.remove(userId);
+            System.out.println("用户下线移除: ID " + userId);
         }
     }
 
