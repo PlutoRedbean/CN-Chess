@@ -117,15 +117,25 @@ public class DBManager {
 
         // 在 Java 内存中排序：胜率优先(降序)，胜场次之(降序)
         list.sort((u1, u2) -> {
+            // 计算胜率
             double rate1 = (double) u1.getWins() / u1.getTotalGames();
             double rate2 = (double) u2.getWins() / u2.getTotalGames();
             
-            // 胜率不同，高的排前
+            // 1. 第一优先级：胜率 (降序，高的排前)
+            // 使用 0.0001 误差容限来比较浮点数
             if (Math.abs(rate1 - rate2) > 0.0001) {
                 return Double.compare(rate2, rate1); 
             }
-            // 胜率相同，胜场多的排前
-            return Integer.compare(u2.getWins(), u1.getWins());
+            
+            // 2. 第二优先级：胜场 (降序，多的排前)
+            int winsCompare = Integer.compare(u2.getWins(), u1.getWins());
+            if (winsCompare != 0) {
+                return winsCompare;
+            }
+
+            // 3. 第三优先级：ID (升序，小的排前)
+            // ID 小意味着注册时间早，通常作为最后的平局决胜条件
+            return Integer.compare(u1.getId(), u2.getId());
         });
 
         // 只取前 10 名

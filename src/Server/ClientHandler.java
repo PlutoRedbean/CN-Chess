@@ -121,7 +121,7 @@ public class ClientHandler extends Thread {
             List<User> top10 = new DBManager().getWinRateLeaderboard();
             System.out.println("[Cmd] 获取到排行榜数据条数: " + top10.size());
             
-            // 2. [修改] 逐行发送消息，避免使用 \n 导致客户端 readLine() 截断
+            // 2. 逐行发送消息，避免使用 \n 导致客户端 readLine() 截断
             sendMessage(Cmd.CHAT + "|系统: === 🏆 胜率排行榜 (Top 10) ===");
             
             if (top10.isEmpty()) {
@@ -129,22 +129,17 @@ public class ClientHandler extends Thread {
             } else {
                 int rank = 1;
                 for (User u : top10) {
-                    // 格式化每一行
-                    String line = String.format("   %d. %-6s | 胜率: %s | 场次: %d", 
+                    String line = String.format("   %2d. %-12s | 胜率: %6s | 场次: %-5d", 
                               rank++, 
                               u.getUsername(), 
                               u.getWinRateStr(), 
                               u.getTotalGames());
                     
-                    // 每一行单独作为一个 CHAT 包发送
                     sendMessage(Cmd.CHAT + "|" + line);
-                    
-                    // [调试]
-                    // System.out.println("[Cmd] 发送行: " + line);
                 }
             }
-            sendMessage(Cmd.CHAT + "|============================");
-            System.out.println("[Cmd] 排行榜响应已分行发送完毕。");
+            // 加长底部分隔符以匹配新的表格宽度
+            sendMessage(Cmd.CHAT + "|===============================================");
             
         } else {
             sendMessage(Cmd.CHAT + "|系统: 未知指令 " + cmdStr);
