@@ -99,7 +99,7 @@ public class ClientHandler extends Thread {
                     if (currentSession != null) {
                         currentSession.forwardChat(this, data);
                     } else {
-                        sendMessage(Cmd.CHAT + "|系统: 您当前不在对局中，无法发送聊天。尝试输入 /ranking 查看排行榜。");
+                        sendMessage(Cmd.CHAT + "|系统: 您当前不在对局中，无法发送聊天。");
                     }
                 }
                 break;
@@ -140,6 +140,31 @@ public class ClientHandler extends Thread {
             }
             // 加长底部分隔符以匹配新的表格宽度
             sendMessage(Cmd.CHAT + "|===============================================");
+            
+        } else if (command.equalsIgnoreCase("/history")) {
+            // 1. 检查是否登录
+            if (this.user == null) {
+                sendMessage(Cmd.CHAT + "|系统: 您尚未登录，无法查看历史记录。");
+                return;
+            }
+
+            System.out.println("[Cmd] 收到历史记录查询: " + this.user.getUsername());
+            
+            // 2. 查询数据
+            List<String> historyList = new DBManager().getHistory(this.user.getId());
+            
+            // 3. 构建并发送消息
+            sendMessage(Cmd.CHAT + "|系统: === 📜 我的近15场对局 ===");
+            
+            if (historyList.isEmpty()) {
+                sendMessage(Cmd.CHAT + "|   (暂无对局记录)");
+            } else {
+                for (String record : historyList) {
+                    // 逐行发送
+                    sendMessage(Cmd.CHAT + "|   " + record);
+                }
+            }
+            sendMessage(Cmd.CHAT + "|============================");
             
         } else {
             sendMessage(Cmd.CHAT + "|系统: 未知指令 " + cmdStr);

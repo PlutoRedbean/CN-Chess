@@ -4,6 +4,7 @@ import Model.User;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.text.SimpleDateFormat;
 
 public class DBManager {
     // 在服务端运行，故使用localhost
@@ -156,6 +157,63 @@ public class DBManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public List<String> getHistory(int userId) {
+        List<String> history = new ArrayList<>();
+        // 关联查询：我们需要从 games 表查记录，同时关联 users 表两次（u1, u2）来获取双方的名字
+        String sql = "SELECT g.player1_id, g.player2_id, g.winner_id, g.start_time, " +
+                     "u1.username AS p1name, u2.username AS p2name " +
+                     "FROM games g " +
+                     "JOIN users u1 ON g.player1_id = u1.id " +
+                     "JOIN users u2 ON g.player2_id = u2.id " +
+                     "WHERE g.player1_id = ? OR g.player2_id = ? " +
+                     "ORDER BY g.start_time DESC LIMIT 15";
+        
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setInt(1, userId);
+            pstmt.setInt(2, userId);
+            
+            ResultSet rs = pstmt.executeQuery();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd"); // 只显示日期，如需时间可改为 "yyyy-MM-dd HH:mm"
+            
+            while (rs.next()) {
+                int p1Id = rs.getInt("player1_id");
+                int winnerId = rs.getInt("winner_id");
+                String p1Name = rs.getString("p1name");
+                String p2Name = rs.getString("p2name");
+                Timestamp time = rs.getTimestamp("start_time");
+                
+                // 判断谁是对手，以及当前玩家是胜还是败
+                String opponentName;
+                String resultStr;
+                
+                if (userId == p1Id) {
+                    opponentName = p2Name; // 我是P1，对手是P2
+                } else {
+                    opponentName = p1Name; // 我是P2，对手是P1
+                }
+                
+                if (winnerId == userId) {
+                    resultStr = "胜";
+                } else {
+                    // 这里简化处理，不是我赢就是败（暂时忽略平局逻辑）
+                    resultStr = "败"; 
+                }
+                
+                String dateStr = (time != null) ? sdf.format(time) : "--";
+                
+                // 格式化输出：我 vs 玩家名 胜/败 日期
+                // %-8s 表示左对齐占8位字符，让排版整齐一点
+                String line = String.format("我 vs %-8s %s  %s", opponentName, resultStr, dateStr);
+                history.add(line);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return history;
     }
 
     public void recordGame(int p1Id, int p2Id, int winnerId) {
